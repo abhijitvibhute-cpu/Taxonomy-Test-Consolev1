@@ -679,7 +679,7 @@ $("semSubmit").onclick=()=>{
   const fb=$("semResult");fb.className="feedbox show "+(ok?"ok":"no");
   fb.innerHTML=row?`<div class="grade">${ok?"✓ Impact correct":"✗ Impact mismatch"}</div><div class="tiny">You chose <b>${esc(picked||"—")}</b>; the objective "${esc(row.task)}" rolls up to <b>${esc(row.impact)}</b> (via L1 ${esc(row.l1)}).</div>`:`<div class="tiny">Pick an objective to score.</div>`;
   results.push({ts:Date.now(),tester,mode:"SEM",objective:$("sem_obj").value||"(intake)",marketplace:$("sem_mkt").value,impact:picked,request:"",exec:"",score:row?(ok?"1/1":"0/1"):"",correct:ok,requirements:"",...cap});
-  save(LS_RES,results);renderResults();
+  save(LS_RES,results);postToSheet(results[results.length-1]);renderResults();
   $("sem_impact").value="";$("sem_mkt").value="";$("sem_obj").value="";resetCapture("sem");
 };
 
@@ -700,7 +700,7 @@ $("epmSubmit").onclick=()=>{
   fb.innerHTML=`<div class="grade">${c===3?"✓ Correct routing":c>=2?"Partial — "+c+"/3":"Mis-routed — "+c+"/3"}</div><table><thead><tr><th>Level</th><th>Your route</th><th>Answer key</th><th></th></tr></thead><tbody>`+det.map(d=>`<tr><td>${LBL[d.l]}</td><td>${esc(d.guess)}</td><td>${esc(d.ans)}</td><td class="check ${d.ok?'ok':'no'}">${d.ok?'✓':'✗'}</td></tr>`).join("")+`</tbody></table>`;
   renderFlow($("epmFlow"),$("epmOutcome"),$("epmAutoNote"),{impact:row.impact,marketplace:row.marketplace,l1:row.l1,l2:row.l2,l3:row.l3},false);
   results.push({ts:Date.now(),tester,mode:"EPM",objective:row.task,marketplace:row.marketplace,impact:row.impact,request:`${g.l1||"—"} / ${g.l2||"—"} / ${g.l3||"—"}`,exec:"",score:c+"/3",correct:c===3,requirements:"",...cap});
-  save(LS_RES,results);renderResults();
+  save(LS_RES,results);postToSheet(results[results.length-1]);renderResults();
 };
 
 /* STAGE 3 — CORE */
@@ -720,7 +720,7 @@ $("coreSubmit").onclick=()=>{
   const fb=$("coreResult");fb.className="feedbox show "+(c===2?"ok":"no");
   fb.innerHTML=`<div class="grade">${c===2?"✓ Correct":c===1?"Partial — 1/2":"Mismatch — 0/2"}</div><table><thead><tr><th>Field</th><th>Your call</th><th>Answer key</th><th></th></tr></thead><tbody>`+det.map(d=>`<tr><td>${LBL[d.l]}</td><td>${esc(d.guess)}</td><td>${esc(d.ans)}</td><td class="check ${d.ok?'ok':'no'}">${d.ok?'✓':'✗'}</td></tr>`).join("")+`</tbody></table>`+(reqTxt?`<div class="tiny" style="margin-top:6px">Requirements saved to model for <b>${esc(row.l2)}</b> · ${esc(row.marketplace)}.</div>`:"");
   results.push({ts:Date.now(),tester,mode:"Core",objective:row.task,marketplace:row.marketplace,impact:row.impact,request:`${row.l1} / ${row.l2} / ${row.l3}`,exec:`${g.team||"—"} / ${g.path||"—"}`,score:c+"/2",correct:c===2,requirements:reqTxt,...cap});
-  save(LS_RES,results);renderResults();
+  save(LS_RES,results);postToSheet(results[results.length-1]);renderResults();
 };
 
 /* EDIT */
@@ -751,6 +751,25 @@ $("copyCsv").onclick=()=>{const t=$("csvOut");t.style.display="block";t.value=cs
 $("clearRes").onclick=()=>{if(confirm("Delete ALL captured results?")){results=[];save(LS_RES,results);renderResults();}};
 
 function download(name,text){const b=new Blob([text],{type:"text/plain"});const u=URL.createObjectURL(b);const a=document.createElement("a");a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1500);}
+
+/* ===== Google Sheet backend ===== */
+/* Paste your Apps Script Web app URL (ends in /exec) between the quotes below. */
+const SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbxRwGXcGFMhQT_JI60Atqx_YcEXkFP8OYDa05GZsYSGauvZg-eqr-FNpzn84KqEH2xb-g/exec";
+function postToSheet(r){
+  if(!SHEET_ENDPOINT) return; // not configured yet — saves locally only
+  try{
+    const payload={
+      timestamp:new Date(r.ts).toISOString(), tester:r.tester, stage:r.mode,
+      objective:r.objective, marketplace:r.marketplace, impact:r.impact,
+      request:r.request, exec:r.exec, score:r.score, correct:r.correct,
+      tool:r.tool, toolNeeded:r.toolNeeded, auto:r.auto, gaps:r.gaps,
+      requirements:r.requirements, description:r.description, feedback:r.feedback
+    };
+    fetch(SHEET_ENDPOINT,{method:"POST",mode:"no-cors",
+      headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body:JSON.stringify(payload)});
+  }catch(e){/* never block the tester if the sheet is unreachable */}
+}
 function refreshStat(){$("modelStat").textContent=`${rows().length} archetypes · ${(model.marketplaces||[]).length} marketplaces`;$("verBadge").textContent=`${model.version||"v2"} · ${model.date||"2026-06-10"}`;}
 
 document.querySelectorAll("nav.tabs button").forEach(b=>b.onclick=()=>{document.querySelectorAll("nav.tabs button").forEach(x=>x.classList.remove("active"));document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));b.classList.add("active");$("panel-"+b.dataset.tab).classList.add("active");});
