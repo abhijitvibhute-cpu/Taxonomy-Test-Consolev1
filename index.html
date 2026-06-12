@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trinity Request Translation Test Console</title>
+<style>
+:root{color-scheme:light;--bg:#f6f7fb;--card:#ffffff;--ink:#1c2333;--muted:#6b7280;--line:#e5e7eb;--accent:#4f46e5;--accent-soft:#eef2ff;--good:#0f9d58;--good-soft:#e6f4ea;--bad:#d23f31;--bad-soft:#fdecea;--warn:#b7791f;--warn-soft:#fdf6e3;--chip:#f1f3f9;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+.wrap{max-width:1180px;margin:0 auto;padding:18px 18px 60px;}
+header.top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+h1{font-size:20px;margin:0 0 2px;}
+.sub{color:var(--muted);font-size:12.5px;max-width:680px;}
+.badge{background:var(--accent-soft);color:var(--accent);border:1px solid #dfe3ff;border-radius:999px;padding:4px 10px;font-weight:600;font-size:12px;white-space:nowrap;}
+.tester{display:flex;align-items:center;gap:6px;margin-top:8px;}
+.tester input{border:1px solid var(--line);border-radius:8px;padding:6px 9px;font-size:13px;}
+nav.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:16px 0 14px;}
+nav.tabs button{border:1px solid var(--line);background:var(--card);color:var(--ink);padding:8px 13px;border-radius:9px;cursor:pointer;font-size:13px;font-weight:600;}
+nav.tabs button.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+.panel{display:none;} .panel.active{display:block;}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px;box-shadow:0 1px 2px rgba(16,24,40,.04);}
+.card h2{font-size:14px;margin:0 0 4px;}
+.steptag{display:inline-block;font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--accent);background:var(--accent-soft);border-radius:6px;padding:2px 7px;margin-bottom:8px;}
+.row{display:flex;flex-wrap:wrap;gap:10px;}
+.fld{display:flex;flex-direction:column;gap:4px;min-width:150px;flex:1;}
+.fld label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);}
+select,input.txt,textarea{border:1px solid var(--line);border-radius:8px;padding:8px 9px;font-size:13px;background:#fff;color:var(--ink);width:100%;font-family:inherit;}
+textarea{min-height:56px;resize:vertical;}
+.btn{border:1px solid var(--accent);background:var(--accent);color:#fff;border-radius:9px;padding:9px 15px;font-weight:700;font-size:13px;cursor:pointer;}
+.btn.ghost{background:#fff;color:var(--accent);} .btn.sub{background:#fff;color:var(--ink);border-color:var(--line);font-weight:600;}
+.btn.sm{padding:6px 10px;font-size:12px;} .btn.danger{border-color:var(--bad);color:var(--bad);background:#fff;}
+.given{background:var(--accent-soft);border:1px solid #dfe3ff;border-radius:9px;padding:8px 11px;font-size:12.5px;}
+.given b{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--accent);font-weight:800;}
+.flowwrap{overflow-x:auto;padding-bottom:6px;} .flow{display:flex;min-width:760px;}
+.col{flex:1;min-width:118px;border-right:1px dashed var(--line);padding:0 8px;} .col:last-child{border-right:none;}
+.col .h{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);text-align:center;margin-bottom:8px;height:24px;}
+.node{background:var(--chip);border:1px solid var(--line);border-radius:7px;padding:6px 7px;margin:5px 0;font-size:11.5px;cursor:pointer;text-align:center;transition:.12s;}
+.node:hover{border-color:var(--accent);} .node.sel{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:700;} .node.dim{opacity:.4;}
+.outcome{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;}
+.pill{border-radius:9px;padding:8px 12px;font-size:12.5px;border:1px solid var(--line);background:#fff;}
+.pill b{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:800;margin-bottom:2px;}
+.pill.team{background:var(--accent-soft);border-color:#dfe3ff;} .pill.path{background:var(--good-soft);border-color:#bfe3c9;} .pill.impact{background:#fff4ec;border-color:#f3d6bf;} .pill.tool{background:#eef7ff;border-color:#cfe4f7;} .pill.mkt{background:#f3f0ff;border-color:#ddd6fe;}
+.auto{margin-top:12px;border-top:1px solid var(--line);padding-top:10px;font-size:12.5px;color:var(--muted);}
+.auto .tag,.tag{display:inline-block;border-radius:999px;padding:2px 9px;font-weight:700;font-size:11px;}
+.tag.hi{background:var(--bad-soft);color:var(--bad);} .tag.md{background:var(--warn-soft);color:var(--warn);} .tag.lo{background:var(--chip);color:var(--muted);} .tag.src{background:var(--good-soft);color:var(--good);} .tag.draft{background:var(--warn-soft);color:var(--warn);}
+table{width:100%;border-collapse:collapse;font-size:12.5px;} th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top;}
+th{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);} tr:hover td{background:#fafbff;}
+.check{font-weight:800;} .check.ok{color:var(--good);} .check.no{color:var(--bad);}
+.grade{font-size:24px;font-weight:800;margin:2px 0;}
+.statline{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:10px;}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 14px;min-width:104px;}
+.stat .n{font-size:22px;font-weight:800;} .stat .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;}
+.hint{font-size:12px;color:var(--muted);margin:2px 0 10px;}
+.gapgrid{display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:4px;}
+.gapgrid label{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;text-transform:none;letter-spacing:0;color:var(--ink);}
+.inline{display:flex;gap:8px;align-items:center;flex-wrap:wrap;} .muted{color:var(--muted);} .right{margin-left:auto;}
+footer{color:var(--muted);font-size:11.5px;margin-top:18px;line-height:1.6;}
+.banner{background:var(--warn-soft);border:1px solid #f0e2bd;color:#7a5a12;border-radius:9px;padding:8px 12px;font-size:12.5px;margin-bottom:12px;}
+.resultwrap{overflow-x:auto;} .tiny{font-size:11px;} .editrow input{font-size:11.5px;padding:5px 6px;}
+.feedbox{display:none;border-radius:9px;padding:12px;margin-top:12px;} .feedbox.show{display:block;}
+.feedbox.ok{background:var(--good-soft);border:1px solid #bfe3c9;} .feedbox.no{background:var(--bad-soft);border:1px solid #f3c9c4;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Trinity Request Translation Test Console</h1>
+      <div class="sub">A chained translation test across three roles. SEM frames the ask (impact + marketplace + objective) → Brand EPM assigns request type &amp; categories (L1/L2/L3) → Core Team maps execution team, solution path &amp; requirements. Each stage is scored against the Top-20 answer key; you update the model as you test.</div>
+      <div class="tester"><label class="tiny muted" for="testerName" style="font-weight:700">Tester</label><input id="testerName" placeholder="Your name (saved with each result)"></div>
+    </div>
+    <div style="text-align:right"><span class="badge" id="verBadge">v2 · 2026-06-10</span><div class="tiny muted" style="margin-top:6px" id="modelStat"></div></div>
+  </header>
+
+  <nav class="tabs">
+    <button data-tab="sem" class="active">1 · SEM Intake</button>
+    <button data-tab="epm">2 · Brand EPM</button>
+    <button data-tab="core">3 · Core Team</button>
+    <button data-tab="explore">Explore Model</button>
+    <button data-tab="edit">Edit Model</button>
+    <button data-tab="results">Results</button>
+  </nav>
+
+  <!-- ===== SEM ===== -->
+  <section class="panel active" id="panel-sem">
+    <div class="card">
+      <div class="steptag">Stage 1 · SEM</div>
+      <h2>Frame the ask</h2>
+      <div class="hint">Start from Business Impact, set the marketplace, and pick the business objective (the SEM or brand ask). Scored on whether the impact you chose matches the objective.</div>
+      <div class="row">
+        <div class="fld"><label>1 · Business Impact</label><select id="sem_impact"></select></div>
+        <div class="fld"><label>2 · Marketplace</label><select id="sem_mkt"></select></div>
+        <div class="fld" style="flex:2"><label>3 · Business Objective · the ask</label><select id="sem_obj"></select></div>
+      </div>
+      <div id="cap_sem"></div>
+      <div class="inline" style="margin-top:12px"><button class="btn" id="semSubmit">Submit intake</button><span class="right tiny muted">Saved in this browser. Export from Results.</span></div>
+      <div class="feedbox" id="semResult"></div>
+    </div>
+  </section>
+
+  <!-- ===== EPM ===== -->
+  <section class="panel" id="panel-epm">
+    <div class="card">
+      <div class="steptag">Stage 2 · Brand EPM</div>
+      <h2>Assign request type &amp; categories</h2>
+      <div class="hint">You're handed the objective and marketplace from intake. Route it: L1 Workstream → L2 Request Type → L3 Category. Scored on all three.</div>
+      <div class="row">
+        <div class="fld" style="flex:2"><label>Business Objective · handed from SEM</label><select id="epm_obj"></select></div>
+        <div class="fld"><label>Given context</label><div class="given" id="epm_given"></div></div>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <div class="fld"><label>L1 Workstream</label><select id="p_l1"></select></div>
+        <div class="fld"><label>L2 Request Type</label><select id="p_l2"></select></div>
+        <div class="fld"><label>L3 Category</label><select id="p_l3"></select></div>
+      </div>
+      <div id="cap_epm"></div>
+      <div class="inline" style="margin-top:12px"><button class="btn" id="epmSubmit">Submit &amp; score</button><button class="btn sub sm" id="epmRandom">Random request</button></div>
+      <div class="feedbox" id="epmResult"></div>
+    </div>
+    <div class="card"><h2>Process map · correct route</h2><div class="hint">Revealed after submit.</div><div class="flowwrap"><div class="flow" id="epmFlow"></div></div><div class="outcome" id="epmOutcome"></div><div class="auto" id="epmAutoNote"></div></div>
+  </section>
+
+  <!-- ===== CORE ===== -->
+  <section class="panel" id="panel-core">
+    <div class="card">
+      <div class="steptag">Stage 3 · Core Team</div>
+      <h2>Map execution team, solution path &amp; requirements</h2>
+      <div class="hint">You're handed the request type, categories and marketplace. Because teams are set up by marketplace, pick the Execution Team and Solution Path, then map the Requirements (these save to the model, keyed by request type + marketplace). Scored on team + path.</div>
+      <div class="row">
+        <div class="fld" style="flex:2"><label>Business Objective · handed from EPM</label><select id="core_obj"></select></div>
+        <div class="fld" style="flex:2"><label>Given: request type &amp; categories + marketplace</label><div class="given" id="core_given"></div></div>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <div class="fld"><label>Execution Team</label><select id="c_team"></select></div>
+        <div class="fld"><label>Solution Path</label><select id="c_path"></select></div>
+        <div class="fld" style="flex:2"><label>Requirements · maps to request type + marketplace</label><textarea id="core_req" placeholder="What's required to execute: inputs, data, approvals, SOP link…"></textarea></div>
+      </div>
+      <div id="cap_core"></div>
+      <div class="inline" style="margin-top:12px"><button class="btn" id="coreSubmit">Submit &amp; score</button><button class="btn sub sm" id="coreRandom">Random request</button><span class="right tiny muted">Requirements you enter are saved to the model.</span></div>
+      <div class="feedbox" id="coreResult"></div>
+    </div>
+  </section>
+
+  <!-- ===== EXPLORE ===== -->
+  <section class="panel" id="panel-explore">
+    <div class="card">
+      <h2>Walk the operating model</h2>
+      <div class="hint">Spine: Business Impact → Marketplace → L1 → L2 → L3. Marketplace is a routing level (backend teams are set up by marketplace), so it shapes the execution team. Select at any level — the map prunes; click a node to set it.</div>
+      <div class="row">
+        <div class="fld"><label>Business Impact</label><select id="e_impact"></select></div>
+        <div class="fld"><label>Marketplace</label><select id="e_marketplace"></select></div>
+        <div class="fld"><label>L1 Workstream</label><select id="e_l1"></select></div>
+        <div class="fld"><label>L2 Request Type</label><select id="e_l2"></select></div>
+        <div class="fld"><label>L3 Category</label><select id="e_l3"></select></div>
+      </div>
+      <div class="inline" style="margin-top:8px"><button class="btn sub sm" id="eReset">Clear selection</button><span class="tiny muted" id="eMatch"></span></div>
+    </div>
+    <div class="card"><h2>Process map</h2><div class="flowwrap"><div class="flow" id="eFlow"></div></div><div class="outcome" id="eOutcome"></div><div class="auto" id="eAutoNote"></div></div>
+    <div class="card">
+      <h2>Automation priority · 307 tagged subtasks (v20)</h2>
+      <div class="hint">Where the real volume is. High volume + procedural = automate first.</div>
+      <div class="resultwrap"><table id="volTable"><thead><tr><th>Task Category</th><th>Subtasks</th><th>Procedural</th><th>Cognitive</th><th>Completed</th><th>Automation priority</th></tr></thead><tbody></tbody></table></div>
+    </div>
+  </section>
+
+  <!-- ===== EDIT ===== -->
+  <section class="panel" id="panel-edit">
+    <div class="card">
+      <h2>Business Impact → L1 mapping</h2>
+      <div class="banner">Business Impact is the root; these links say which L1 workstreams roll up to each impact. Five sourced from V7 (<span class="tag src">V7</span>); five my drafts (<span class="tag draft">draft</span>) — confirm or change here.</div>
+      <div class="resultwrap"><table id="mapTable"><thead><tr><th>L1 Workstream</th><th>Business Impact</th><th>Source</th></tr></thead><tbody></tbody></table></div>
+    </div>
+    <div class="card">
+      <h2>Edit archetypes — update as you test</h2>
+      <div class="banner">Edits save to <b>this browser only</b>. <b>Export model JSON</b> to save a version or share; <b>Import</b> to load elsewhere. Set Tool and Requirements per archetype as you learn them.</div>
+      <div class="inline" style="margin-bottom:10px">
+        <button class="btn sm" id="addRow">+ Add request row</button>
+        <button class="btn ghost sm" id="expModel">Export model JSON</button>
+        <button class="btn sub sm" id="impModelBtn">Import model JSON</button>
+        <input type="file" id="impModel" accept="application/json" style="display:none">
+        <button class="btn danger sm right" id="resetModel">Reset to original</button>
+      </div>
+      <div class="inline" style="margin-bottom:10px"><div class="fld" style="max-width:220px"><label>Model version</label><input class="txt" id="verInput"></div></div>
+      <div class="resultwrap"><table id="editTable"><thead><tr>
+        <th>Objective</th><th>Marketplace</th><th>L1</th><th>L2</th><th>L3</th><th>Team</th><th>Solution Path</th><th>Tool(s)</th><th>Requirements</th><th></th>
+      </tr></thead><tbody></tbody></table></div>
+    </div>
+  </section>
+
+  <!-- ===== RESULTS ===== -->
+  <section class="panel" id="panel-results">
+    <div class="card">
+      <h2>Test results</h2>
+      <div class="statline" id="stats"></div>
+      <div class="inline" style="margin-bottom:10px">
+        <select id="fMode" class="btn sub sm" style="font-weight:600"><option value="">All stages</option><option value="SEM">SEM</option><option value="EPM">EPM</option><option value="Core">Core Team</option></select>
+        <button class="btn ghost sm" id="expCsv">Export results CSV</button>
+        <button class="btn sub sm" id="copyCsv">Copy CSV</button>
+        <button class="btn danger sm right" id="clearRes">Clear all results</button>
+      </div>
+      <div class="resultwrap"><table id="resTable"><thead><tr>
+        <th>When</th><th>Tester</th><th>Stage</th><th>Objective</th><th>Mkt</th><th>Impact</th><th>Request (L1/L2/L3)</th><th>Team/Path</th><th>Score</th><th>Tools used</th><th>Tools needed</th><th>Auto</th><th>Gaps</th><th>Requirements</th><th>Desc</th><th>Feedback</th>
+      </tr></thead><tbody></tbody></table></div>
+      <textarea id="csvOut" style="display:none;margin-top:10px;min-height:120px"></textarea>
+    </div>
+  </section>
+
+  <footer>
+    Source: <b>Trinity_Top20_Request_Translation_Test_Workbook.xlsx</b> + <b>Trinity_Subtask_Tagged_Reference_v20.xlsx</b>. Routing root = Business Impact; Marketplace is a routing level (teams by marketplace). Impact→L1 mapping: 5 V7 + 5 draft (editable). Requirements key on request type + marketplace. Gaps: Missing SOP, Training, Missing knowledge guide, Escalation support, Missing dashboard. Stored locally — export to share or keep a version. Built 2026-06-10.
+  </footer>
+</div>
+
+<script>
+const SEED={
+ "version": "v1",
+ "date": "2026-06-09",
+ "source": "Trinity_Top20_Request_Translation_Test_Workbook.xlsx + Trinity_Subtask_Tagged_Reference_v20.xlsx",
+ "fields": [
+  "task",
+  "need",
+  "marketplace",
+  "l1",
+  "l2",
+  "l3",
+  "team",
+  "path"
+ ],
+ "rows": [
+  {
+   "task": "Listing Audit & Fix",
+   "need": "Performance Improvement",
+   "marketplace": "Walmart",
+   "l1": "Growth & Optimization",
+   "l2": "Listing Quality Investigation",
+   "l3": "Missing Attributes",
+   "team": "Core Team",
+   "path": "Existing Process"
+  },
+  {
+   "task": "Promotion Setup",
+   "need": "Growth Opportunity",
+   "marketplace": "Walmart",
+   "l1": "Promotions",
+   "l2": "Promotion Setup",
+   "l3": "Walmart Deal",
+   "team": "Core Team",
+   "path": "Guide + SOP"
+  },
+  {
+   "task": "Promotion Update",
+   "need": "Growth Opportunity",
+   "marketplace": "Walmart",
+   "l1": "Promotions",
+   "l2": "Promotion Update",
+   "l3": "Walmart Coupon",
+   "team": "Core Team",
+   "path": "SOP"
+  },
+  {
+   "task": "Promotion Removal",
+   "need": "Growth Opportunity",
+   "marketplace": "Walmart",
+   "l1": "Promotions",
+   "l2": "Promotion Removal",
+   "l3": "Promotion End",
+   "team": "Core Team",
+   "path": "SOP"
+  },
+  {
+   "task": "New Product Launch",
+   "need": "Assortment Expansion",
+   "marketplace": "Walmart",
+   "l1": "Expansion",
+   "l2": "Assortment Expansion",
+   "l3": "New Product Launch",
+   "team": "Core Team",
+   "path": "Workflow + SOP"
+  },
+  {
+   "task": "Category Expansion",
+   "need": "Assortment Expansion",
+   "marketplace": "Walmart",
+   "l1": "Expansion",
+   "l2": "Assortment Expansion",
+   "l3": "Category Expansion",
+   "team": "Core Team",
+   "path": "Workflow + SOP"
+  },
+  {
+   "task": "Item Update",
+   "need": "Operational Support",
+   "marketplace": "Walmart",
+   "l1": "Item Management",
+   "l2": "Item Update",
+   "l3": "Content Update",
+   "team": "Core Team",
+   "path": "SOP"
+  },
+  {
+   "task": "Pricing Update",
+   "need": "Performance Improvement",
+   "marketplace": "Walmart",
+   "l1": "Pricing",
+   "l2": "Price Update",
+   "l3": "Retail Price Change",
+   "team": "Core Team",
+   "path": "SOP"
+  },
+  {
+   "task": "Inventory Investigation",
+   "need": "Inventory Support",
+   "marketplace": "Walmart",
+   "l1": "Inventory",
+   "l2": "Inventory Investigation",
+   "l3": "Missing Inventory",
+   "team": "Core Team",
+   "path": "Existing Process"
+  },
+  {
+   "task": "Inventory Removal",
+   "need": "Inventory Support",
+   "marketplace": "Walmart",
+   "l1": "Inventory",
+   "l2": "Inventory Removal",
+   "l3": "Removal Order",
+   "team": "Core Team",
+   "path": "Existing Process"
+  },
+  {
+   "task": "Compliance Review",
+   "need": "Compliance Support",
+   "marketplace": "Walmart",
+   "l1": "Account Health",
+   "l2": "Compliance Review",
+   "l3": "Manual Review",
+   "team": "Account Health",
+   "path": "Guide + SOP"
+  },
+  {
+   "task": "Account Access Setup",
+   "need": "Operational Support",
+   "marketplace": "Walmart",
+   "l1": "Account Management",
+   "l2": "Marketplace Access",
+   "l3": "User Access",
+   "team": "Core Team",
+   "path": "Guide"
+  },
+  {
+   "task": "Dashboard Request",
+   "need": "Reporting & Insights",
+   "marketplace": "Cross Marketplace",
+   "l1": "Reporting & Analytics",
+   "l2": "Dashboard Request",
+   "l3": "Brand Dashboard",
+   "team": "Analytics",
+   "path": "Dashboard"
+  },
+  {
+   "task": "Executive Reporting",
+   "need": "Reporting & Insights",
+   "marketplace": "Cross Marketplace",
+   "l1": "Reporting & Analytics",
+   "l2": "Executive Reporting",
+   "l3": "WBR",
+   "team": "Analytics",
+   "path": "Dashboard"
+  },
+  {
+   "task": "Traffic Investigation",
+   "need": "Performance Improvement",
+   "marketplace": "Walmart",
+   "l1": "Growth & Optimization",
+   "l2": "Traffic Investigation",
+   "l3": "Organic Traffic Decline",
+   "team": "Analytics",
+   "path": "Analysis"
+  },
+  {
+   "task": "Conversion Investigation",
+   "need": "Performance Improvement",
+   "marketplace": "Walmart",
+   "l1": "Growth & Optimization",
+   "l2": "Conversion Investigation",
+   "l3": "PDP Conversion",
+   "team": "Analytics",
+   "path": "Analysis"
+  },
+  {
+   "task": "SEO Request",
+   "need": "Growth Opportunity",
+   "marketplace": "Walmart",
+   "l1": "Growth & Optimization",
+   "l2": "SEO Request",
+   "l3": "Keyword Optimization",
+   "team": "SEO Team",
+   "path": "Guide + Execution"
+  },
+  {
+   "task": "Creative Request",
+   "need": "Growth Opportunity",
+   "marketplace": "Walmart",
+   "l1": "Growth & Optimization",
+   "l2": "Creative Request",
+   "l3": "PDP Assets",
+   "team": "Creative Team",
+   "path": "Guide + Execution"
+  },
+  {
+   "task": "Order Investigation",
+   "need": "Order Support",
+   "marketplace": "Walmart",
+   "l1": "Orders & Returns",
+   "l2": "Order Investigation",
+   "l3": "Fulfillment Issue",
+   "team": "Core Team",
+   "path": "Existing Process"
+  },
+  {
+   "task": "Marketplace Expansion",
+   "need": "Marketplace Expansion",
+   "marketplace": "Target",
+   "l1": "Expansion",
+   "l2": "Marketplace Expansion",
+   "l3": "New Marketplace Launch",
+   "team": "Core Team",
+   "path": "Workflow + SOP"
+  }
+ ],
+ "categoryVolume": [
+  {
+   "category": "Listing Audit & Fix",
+   "count": 76.0,
+   "completed": 29.0,
+   "notCompleted": 47.0,
+   "procedural": 75.0,
+   "cognitive": 1.0
+  },
+  {
+   "category": "Item Setup",
+   "count": 38.0,
+   "completed": 18.0,
+   "notCompleted": 20.0,
+   "procedural": 38.0,
+   "cognitive": 0.0
+  },
+  {
+   "category": "Finance Requests",
+   "count": 27.0,
+   "completed": 18.0,
+   "notCompleted": 9.0,
+   "procedural": 27.0,
+   "cognitive": 0.0
+  },
+  {
+   "category": "Analysis",
+   "count": 24.0,
+   "completed": 17.0,
+   "notCompleted": 7.0,
+   "procedural": 4.0,
+   "cognitive": 20.0
+  },
+  {
+   "category": "Data Pull",
+   "count": 24.0,
+   "completed": 16.0,
+   "notCompleted": 8.0,
+   "procedural": 24.0,
+   "cognitive": 0.0
+  },
+  {
+   "category": "Inventory Manager Request",
+   "count": 22.0,
+   "completed": 11.0,
+   "notCompleted": 11.0,
+   "procedural": 21.0,
+   "cognitive": 1.0
+  },
+  {
+   "category": "Submit Promotion",
+   "count": 16.0,
+   "completed": 13.0,
+   "notCompleted": 3.0,
+   "procedural": 16.0,
+   "cognitive": 0.0
+  },
+  {
+   "category": "Reporting",
+   "count": 14.0,
+   "completed": 5.0,
+   "notCompleted": 9.0,
+   "procedural": 0.0,
+   "cognitive": 14.0
+  },
+  {
+   "category": "Predict Updates",
+   "count": 12.0,
+   "completed": 12.0,
+   "notCompleted": 0.0,
+   "procedural": 12.0,
+   "cognitive": 0.0
+  },
+  {
+   "category": "Creative Request",
+   "count": 9.0,
+   "completed": 6.0,
+   "notCompleted": 3.0,
+   "procedural": 9.0,
+   "cognitive": 0.0
+  },
+  {
+   "category": "Quality Check",
+   "count": 7.0,
+   "completed": 3.0,
+   "notCompleted": 4.0,
+   "procedural": 7.0,
+   "cognitive": 0.0
+  },
+  {
+   "category": "Pending Brand Approval",
+   "count": 6.0,
+   "completed": 5.0,
+   "notCompleted": 1.0,
+   "procedural": 6.0,
+   "cognitive": 0.0
+  },
+  {
+   "category": "Account Health Issue",
+   "count": 6.0,
+   "completed": 5.0,
+   "notCompleted": 1.0,
+   "procedural": 6.0,
+   "cognitive": 0.0
+  },
+  {
+   "category": "Presentation",
+   "count": 5.0,
+   "completed": 1.0,
+   "notCompleted": 4.0,
+   "procedural": 0.0,
+   "cognitive": 5.0
+  },
+  {
+   "category": "Canceled",
+   "count": 4.0,
+   "completed": 4.0,
+   "notCompleted": 0.0,
+   "procedural": 4.0,
+   "cognitive": 0.0
+  },
+  {
+   "category": "No Work Required",
+   "count": 4.0,
+   "completed": 4.0,
+   "notCompleted": 0.0,
+   "procedural": 4.0,
+   "cognitive": 0.0
+  },
+  {
+   "category": "Documentation",
+   "count": 4.0,
+   "completed": 4.0,
+   "notCompleted": 0.0,
+   "procedural": 4.0,
+   "cognitive": 0.0
+  },
+  {
+   "category": "SEO Request",
+   "count": 4.0,
+   "completed": 3.0,
+   "notCompleted": 1.0,
+   "procedural": 4.0,
+   "cognitive": 0.0
+  },
+  {
+   "category": "Long-Term Solution Request",
+   "count": 3.0,
+   "completed": 3.0,
+   "notCompleted": 0.0,
+   "procedural": 1.0,
+   "cognitive": 2.0
+  }
+ ]
+};
+const LS_MODEL="trinity_model_v2b", LS_RES="trinity_results_v2b", LS_TESTER="trinity_tester";
+const DEFAULT_IMPACT_MAP={"Growth & Optimization":{impact:"Traffic",src:"V7"},"Promotions":{impact:"Conversion",src:"V7"},"Inventory":{impact:"Availability",src:"V7"},"Expansion":{impact:"Growth & Expansion",src:"V7"},"Reporting & Analytics":{impact:"Operational Efficiency",src:"V7"},"Account Health":{impact:"Compliance & Risk",src:"draft"},"Pricing":{impact:"Profitability",src:"draft"},"Item Management":{impact:"Customer Experience",src:"draft"},"Account Management":{impact:"Operational Efficiency",src:"draft"},"Orders & Returns":{impact:"Customer Experience",src:"draft"}};
+const IMPACT_LIST=["Traffic","Conversion","Average Order Value","Availability","Profitability","Customer Experience","Operational Efficiency","Compliance & Risk","Growth & Expansion"];
+const MARKETPLACES=["Amazon","Walmart","Target","Best Buy","Macy's","Kohl's","Nordstrom","Lowe's","eBay US","Walmart Canada","Best Buy Canada","Walmart Mexico","Mercado Libre","Cross Marketplace"];
+const TOOL_DEFS=[["predict","Predict"],["shelf","Shelf"],["mkt","Marketplace"],["pi","PI"]];
+const GAP_DEFS=[["sop","Missing SOP"],["train","Training"],["guide","Missing knowledge guide"],["esc","Escalation support"],["dash","Missing dashboard"]];
+const SPINE=["impact","marketplace","l1","l2","l3"];
+const LBL={impact:"Business Impact",marketplace:"Marketplace",l1:"L1 Workstream",l2:"L2 Request Type",l3:"L3 Category",team:"Execution Team",path:"Solution Path"};
+
+function load(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}}
+function save(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+function uniq(a){return [...new Set(a)];}
+function clone(o){return JSON.parse(JSON.stringify(o));}
+const $=id=>document.getElementById(id);
+function esc(s){return(s==null?"":String(s)).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));}
+function today(){return new Date().toISOString().slice(0,10);}
+
+let model=load(LS_MODEL,null)||clone(SEED);
+if(!model.impactMap)model.impactMap=clone(DEFAULT_IMPACT_MAP);
+if(!model.marketplaces)model.marketplaces=MARKETPLACES.slice();
+let results=load(LS_RES,[]);
+let tester=localStorage.getItem(LS_TESTER)||"";
+
+function rows(){return model.rows;}
+function rowOf(name){return rows().find(r=>r.task===name)||null;}
+function impactOf(l1){const m=model.impactMap[l1];return m?m.impact:"";}
+function enrich(){rows().forEach(r=>{r.impact=impactOf(r.l1);if(r.tool===undefined)r.tool="";if(r.requirements===undefined)r.requirements="";});}
+function optsBy(level,up){return uniq(rows().filter(r=>Object.keys(up).every(c=>!up[c]||r[c]===up[c])).map(r=>r[level])).filter(Boolean).sort();}
+function allOf(level){return uniq(rows().map(r=>r[level])).filter(Boolean).sort();}
+function fill(el,vals,keepEmpty,ph){const cur=el.value;el.innerHTML=(keepEmpty?`<option value="">${ph||"—"}</option>`:"")+vals.map(v=>`<option>${esc(v)}</option>`).join("");if(vals.includes(cur))el.value=cur;}
+function fillML(el){fill(el,model.marketplaces,true,"choose…");}
+function partialUpTo(sel,level){const i=SPINE.indexOf(level);const o={};for(let j=0;j<i;j++){if(sel[SPINE[j]])o[SPINE[j]]=sel[SPINE[j]];}return o;}
+
+/* shared capture block */
+function buildCapture(p){
+  $("cap_"+p).innerHTML=
+    `<div class="row" style="margin-top:10px">
+      <div class="fld" style="max-width:200px"><label>Automation Opportunity?</label><select id="${p}_auto"><option value="">—</option><option>No</option><option>Yes</option><option>Already automated</option></select></div>
+      <div class="fld"><label>Tool(s) used now</label><div class="gapgrid">${TOOL_DEFS.map(([k,l])=>`<label><input type="checkbox" id="${p}_t_${k}"> ${l}</label>`).join("")}</div></div>
+      <div class="fld"><label>Tool(s) needed</label><div class="gapgrid">${TOOL_DEFS.map(([k,l])=>`<label><input type="checkbox" id="${p}_n_${k}"> ${l}</label>`).join("")}</div></div>
+      <div class="fld" style="flex:2"><label>Gaps you hit</label><div class="gapgrid">${GAP_DEFS.map(([k,l])=>`<label><input type="checkbox" id="${p}_g_${k}"> ${l}</label>`).join("")}</div></div>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <div class="fld"><label>Description · include brand + details</label><textarea id="${p}_desc" placeholder="Include the brand, then specifics: items/ASINs, deadline, exactly what's being asked…"></textarea></div>
+      <div class="fld"><label>Feedback · on the model / process</label><textarea id="${p}_fb"></textarea></div>
+    </div>`;
+}
+function collectCapture(p){
+  return {
+    auto:$(p+"_auto").value,
+    tool:TOOL_DEFS.filter(([k])=>$(p+"_t_"+k).checked).map(([k,l])=>l).join(", "),
+    toolNeeded:TOOL_DEFS.filter(([k])=>$(p+"_n_"+k).checked).map(([k,l])=>l).join(", "),
+    gaps:GAP_DEFS.filter(([k])=>$(p+"_g_"+k).checked).map(([k,l])=>l).join(", "),
+    description:$(p+"_desc").value, feedback:$(p+"_fb").value
+  };
+}
+function resetCapture(p){$(p+"_auto").value="";TOOL_DEFS.forEach(([k])=>{$(p+"_t_"+k).checked=false;$(p+"_n_"+k).checked=false;});GAP_DEFS.forEach(([k])=>$(p+"_g_"+k).checked=false);$(p+"_desc").value="";$(p+"_fb").value="";}
+
+/* volume */
+function volFor(name){return (model.categoryVolume||[]).find(v=>v.category===name);}
+function autoPriority(v){if(!v)return null;const proc=v.procedural||0,n=v.count||0,ps=n?proc/n:0;if(n>=20&&ps>=0.8)return{k:"hi",t:"High — automate first"};if(n>=10&&ps>=0.6)return{k:"md",t:"Medium"};return{k:"lo",t:"Low"};}
+function renderVol(){const tb=$("volTable").querySelector("tbody");tb.innerHTML="";(model.categoryVolume||[]).slice().sort((a,b)=>(b.count||0)-(a.count||0)).forEach(v=>{const p=autoPriority(v);const tr=document.createElement("tr");tr.innerHTML=`<td>${esc(v.category)}</td><td>${v.count||0}</td><td>${v.procedural??""}</td><td>${v.cognitive??""}</td><td>${v.completed??""}</td><td><span class="tag ${p.k}">${p.t}</span></td>`;tb.appendChild(tr);});}
+
+/* flow (explore + epm reveal) */
+function renderFlow(container,outcomeEl,autoEl,sel,clickable){
+  container.innerHTML="";
+  SPINE.forEach(level=>{
+    const col=document.createElement("div");col.className="col";col.innerHTML=`<div class="h">${LBL[level]}</div>`;
+    optsBy(level,partialUpTo(sel,level)).forEach(v=>{const n=document.createElement("div");n.className="node"+(sel[level]===v?" sel":"")+((sel[level]&&sel[level]!==v)?" dim":"");n.textContent=v;if(clickable)n.onclick=()=>exploreSelect(level,v);col.appendChild(n);});
+    container.appendChild(col);
+  });
+  const matches=rows().filter(r=>SPINE.every(c=>!sel[c]||r[c]===sel[c]));
+  outcomeEl.innerHTML="";
+  if(matches.length){
+    const teams=uniq(matches.map(r=>r.team)),paths=uniq(matches.map(r=>r.path)),imp=uniq(matches.map(r=>r.impact)),mk=uniq(matches.map(r=>r.marketplace)),tools=uniq(matches.map(r=>r.tool).filter(Boolean));
+    outcomeEl.innerHTML=`<div class="pill impact"><b>Business Impact</b>${esc(imp.join(" / "))}</div><div class="pill mkt"><b>Marketplace</b>${esc(mk.join(" / "))}</div><div class="pill team"><b>Execution Team</b>${esc(teams.join(" / "))}</div><div class="pill path"><b>Solution Path</b>${esc(paths.join(" / "))}</div>`+(tools.length?`<div class="pill tool"><b>Tool(s)</b>${esc(tools.join(" / "))}</div>`:"")+`<div class="pill"><b>Matching archetypes</b>${matches.length} of ${rows().length}</div>`;
+  }
+  if(autoEl){autoEl.innerHTML="";const m=matches.length===1?matches[0]:null;if(m){const v=volFor(m.task)||volFor(m.l2);if(v){const p=autoPriority(v);autoEl.innerHTML=`Real volume for <b>${esc(v.category)}</b>: ${v.count} subtasks · ${v.procedural||0} procedural / ${v.cognitive||0} cognitive · <span class="tag ${p.k}">${p.t}</span>`+(m.requirements?` · <b>Requirements:</b> ${esc(m.requirements)}`:"");}else if(m.requirements)autoEl.innerHTML=`<b>Requirements:</b> ${esc(m.requirements)}`;}}
+}
+
+/* EXPLORE */
+const eSel={};const eEls={impact:$("e_impact"),marketplace:$("e_marketplace"),l1:$("e_l1"),l2:$("e_l2"),l3:$("e_l3")};
+function exploreRefresh(){SPINE.forEach(level=>{fill(eEls[level],optsBy(level,partialUpTo(eSel,level)),true,"Any");eEls[level].value=eSel[level]||"";});renderFlow($("eFlow"),$("eOutcome"),$("eAutoNote"),eSel,true);const m=rows().filter(r=>SPINE.every(c=>!eSel[c]||r[c]===eSel[c]));$("eMatch").textContent=Object.keys(eSel).some(k=>eSel[k])?`${m.length} archetype(s) match`:"";}
+function exploreSelect(level,v){const i=SPINE.indexOf(level);eSel[level]=v;SPINE.slice(i+1).forEach(d=>delete eSel[d]);exploreRefresh();}
+SPINE.forEach(level=>eEls[level].addEventListener("change",e=>{if(e.target.value)exploreSelect(level,e.target.value);else{delete eSel[level];exploreRefresh();}}));
+$("eReset").onclick=()=>{Object.keys(eSel).forEach(k=>delete eSel[k]);exploreRefresh();};
+
+/* STAGE 1 — SEM */
+function semInit(){fill($("sem_impact"),allOf("impact"),true,"choose…");fillML($("sem_mkt"));fill($("sem_obj"),rows().map(r=>r.task),true,"choose the ask…");buildCapture("sem");}
+$("semSubmit").onclick=()=>{
+  const row=rowOf($("sem_obj").value);const picked=$("sem_impact").value;
+  const ok = row? picked===row.impact : false;
+  const cap=collectCapture("sem");
+  const fb=$("semResult");fb.className="feedbox show "+(ok?"ok":"no");
+  fb.innerHTML=row?`<div class="grade">${ok?"✓ Impact correct":"✗ Impact mismatch"}</div><div class="tiny">You chose <b>${esc(picked||"—")}</b>; the objective "${esc(row.task)}" rolls up to <b>${esc(row.impact)}</b> (via L1 ${esc(row.l1)}).</div>`:`<div class="tiny">Pick an objective to score.</div>`;
+  results.push({ts:Date.now(),tester,mode:"SEM",objective:$("sem_obj").value||"(intake)",marketplace:$("sem_mkt").value,impact:picked,request:"",exec:"",score:row?(ok?"1/1":"0/1"):"",correct:ok,requirements:"",...cap});
+  save(LS_RES,results);renderResults();
+  $("sem_impact").value="";$("sem_mkt").value="";$("sem_obj").value="";resetCapture("sem");
+};
+
+/* STAGE 2 — EPM */
+function epmGiven(){const r=rowOf($("epm_obj").value);$("epm_given").innerHTML=r?`<b>Marketplace</b> ${esc(r.marketplace)} &nbsp;·&nbsp; <b>Impact</b> ${esc(r.impact)}`:`<span class="muted">—</span>`;}
+function epmCascade(level){const order=["l1","l2","l3"];const i=order.indexOf(level);for(let k=i+1;k<order.length;k++){const lv=order[k];const up={};for(let j=0;j<k;j++){const v=$("p_"+order[j]).value;if(v)up[order[j]]=v;}fill($("p_"+lv),optsBy(lv,up),true,"choose…");$("p_"+lv).value="";}}
+function epmLoad(){epmGiven();fill($("p_l1"),allOf("l1"),true,"choose…");fill($("p_l2"),[],true,"choose…");fill($("p_l3"),[],true,"choose…");["p_l1","p_l2","p_l3"].forEach(id=>$(id).value="");resetCapture("epm");$("epmResult").className="feedbox";$("epmFlow").innerHTML="";$("epmOutcome").innerHTML="";$("epmAutoNote").innerHTML="";}
+function epmInit(){fill($("epm_obj"),rows().map(r=>r.task),false);buildCapture("epm");epmLoad();}
+["l1","l2","l3"].forEach(l=>$("p_"+l).addEventListener("change",()=>epmCascade(l)));
+$("epm_obj").addEventListener("change",epmLoad);
+$("epmRandom").onclick=()=>{const r=rows()[Math.floor(Math.random()*rows().length)];$("epm_obj").value=r.task;epmLoad();};
+$("epmSubmit").onclick=()=>{
+  const row=rowOf($("epm_obj").value);if(!row)return;
+  const g={l1:$("p_l1").value,l2:$("p_l2").value,l3:$("p_l3").value};
+  let c=0;const det=["l1","l2","l3"].map(l=>{const ok=g[l]===row[l];if(ok)c++;return{l,ok,guess:g[l]||"—",ans:row[l]};});
+  const cap=collectCapture("epm");
+  const fb=$("epmResult");fb.className="feedbox show "+(c===3?"ok":"no");
+  fb.innerHTML=`<div class="grade">${c===3?"✓ Correct routing":c>=2?"Partial — "+c+"/3":"Mis-routed — "+c+"/3"}</div><table><thead><tr><th>Level</th><th>Your route</th><th>Answer key</th><th></th></tr></thead><tbody>`+det.map(d=>`<tr><td>${LBL[d.l]}</td><td>${esc(d.guess)}</td><td>${esc(d.ans)}</td><td class="check ${d.ok?'ok':'no'}">${d.ok?'✓':'✗'}</td></tr>`).join("")+`</tbody></table>`;
+  renderFlow($("epmFlow"),$("epmOutcome"),$("epmAutoNote"),{impact:row.impact,marketplace:row.marketplace,l1:row.l1,l2:row.l2,l3:row.l3},false);
+  results.push({ts:Date.now(),tester,mode:"EPM",objective:row.task,marketplace:row.marketplace,impact:row.impact,request:`${g.l1||"—"} / ${g.l2||"—"} / ${g.l3||"—"}`,exec:"",score:c+"/3",correct:c===3,requirements:"",...cap});
+  save(LS_RES,results);renderResults();
+};
+
+/* STAGE 3 — CORE */
+function coreGiven(){const r=rowOf($("core_obj").value);$("core_given").innerHTML=r?`<b>Marketplace</b> ${esc(r.marketplace)} &nbsp;·&nbsp; <b>L1</b> ${esc(r.l1)} &nbsp;·&nbsp; <b>L2</b> ${esc(r.l2)} &nbsp;·&nbsp; <b>L3</b> ${esc(r.l3)}`:`<span class="muted">—</span>`;$("core_req").value=r?(r.requirements||""):"";}
+function coreLoad(){coreGiven();fill($("c_team"),allOf("team"),true,"choose…");fill($("c_path"),allOf("path"),true,"choose…");$("c_team").value="";$("c_path").value="";resetCapture("core");$("coreResult").className="feedbox";}
+function coreInit(){fill($("core_obj"),rows().map(r=>r.task),false);buildCapture("core");coreLoad();}
+$("core_obj").addEventListener("change",coreLoad);
+$("coreRandom").onclick=()=>{const r=rows()[Math.floor(Math.random()*rows().length)];$("core_obj").value=r.task;coreLoad();};
+$("coreSubmit").onclick=()=>{
+  const row=rowOf($("core_obj").value);if(!row)return;
+  const g={team:$("c_team").value,path:$("c_path").value};
+  let c=0;const det=["team","path"].map(l=>{const ok=g[l]===row[l];if(ok)c++;return{l,ok,guess:g[l]||"—",ans:row[l]};});
+  // save requirements to model (keyed by this request type + marketplace via the row)
+  const reqTxt=$("core_req").value.trim();
+  if(reqTxt!==(row.requirements||"")){row.requirements=reqTxt;enrich();save(LS_MODEL,model);renderEdit();}
+  const cap=collectCapture("core");
+  const fb=$("coreResult");fb.className="feedbox show "+(c===2?"ok":"no");
+  fb.innerHTML=`<div class="grade">${c===2?"✓ Correct":c===1?"Partial — 1/2":"Mismatch — 0/2"}</div><table><thead><tr><th>Field</th><th>Your call</th><th>Answer key</th><th></th></tr></thead><tbody>`+det.map(d=>`<tr><td>${LBL[d.l]}</td><td>${esc(d.guess)}</td><td>${esc(d.ans)}</td><td class="check ${d.ok?'ok':'no'}">${d.ok?'✓':'✗'}</td></tr>`).join("")+`</tbody></table>`+(reqTxt?`<div class="tiny" style="margin-top:6px">Requirements saved to model for <b>${esc(row.l2)}</b> · ${esc(row.marketplace)}.</div>`:"");
+  results.push({ts:Date.now(),tester,mode:"Core",objective:row.task,marketplace:row.marketplace,impact:row.impact,request:`${row.l1} / ${row.l2} / ${row.l3}`,exec:`${g.team||"—"} / ${g.path||"—"}`,score:c+"/2",correct:c===2,requirements:reqTxt,...cap});
+  save(LS_RES,results);renderResults();
+};
+
+/* EDIT */
+function renderMap(){const tb=$("mapTable").querySelector("tbody");tb.innerHTML="";uniq(rows().map(r=>r.l1)).filter(Boolean).sort().forEach(l1=>{const cur=model.impactMap[l1]||{impact:"",src:"draft"};const tr=document.createElement("tr");const td1=document.createElement("td");td1.textContent=l1;const td2=document.createElement("td");const sel=document.createElement("select");sel.innerHTML=`<option value="">—</option>`+IMPACT_LIST.map(i=>`<option ${i===cur.impact?"selected":""}>${esc(i)}</option>`).join("");sel.onchange=()=>{model.impactMap[l1]={impact:sel.value,src:(cur.src==="V7"?"V7":"custom")};enrich();persistModel(false);renderMap();};td2.appendChild(sel);const td3=document.createElement("td");td3.innerHTML=cur.src==="V7"?`<span class="tag src">V7</span>`:(cur.src==="custom"?`<span class="tag lo">custom</span>`:`<span class="tag draft">draft</span>`);tr.appendChild(td1);tr.appendChild(td2);tr.appendChild(td3);tb.appendChild(tr);});}
+function renderEdit(){$("verInput").value=model.version||"";const tb=$("editTable").querySelector("tbody");tb.innerHTML="";rows().forEach((r,i)=>{const tr=document.createElement("tr");tr.className="editrow";["task","marketplace","l1","l2","l3","team","path","tool","requirements"].forEach(c=>{const td=document.createElement("td");const inp=document.createElement("input");inp.value=r[c]||"";inp.oninput=()=>{r[c]=inp.value;if(c==="l1")r.impact=impactOf(inp.value);persistModel(false);};td.appendChild(inp);tr.appendChild(td);});const td=document.createElement("td");const b=document.createElement("button");b.className="btn danger sm";b.textContent="✕";b.onclick=()=>{model.rows.splice(i,1);persistModel(true);};td.appendChild(b);tr.appendChild(td);tb.appendChild(tr);});}
+function persistModel(rerender){enrich();save(LS_MODEL,model);refreshStat();if(rerender){renderEdit();renderMap();}renderVol();semInit();epmInit();coreInit();exploreRefresh();}
+$("addRow").onclick=()=>{model.rows.push({task:"New request",marketplace:"",l1:"",l2:"",l3:"",team:"",path:"",tool:"",requirements:""});persistModel(true);};
+$("verInput").addEventListener("change",e=>{model.version=e.target.value;save(LS_MODEL,model);refreshStat();});
+$("resetModel").onclick=()=>{if(confirm("Reset model + impact mapping to original? Edits lost (results kept).")){model=clone(SEED);model.impactMap=clone(DEFAULT_IMPACT_MAP);model.marketplaces=MARKETPLACES.slice();persistModel(true);}};
+$("expModel").onclick=()=>download(`Trinity_Model_${(model.version||"v2")}_${today()}.json`,JSON.stringify(model,null,1));
+$("impModelBtn").onclick=()=>$("impModel").click();
+$("impModel").addEventListener("change",e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{try{const o=JSON.parse(rd.result);if(o.rows){if(!o.impactMap)o.impactMap=clone(DEFAULT_IMPACT_MAP);if(!o.marketplaces)o.marketplaces=MARKETPLACES.slice();model=o;persistModel(true);alert("Model imported.");}else alert("That file has no 'rows'.");}catch(err){alert("Invalid JSON.");}};rd.readAsText(f);});
+
+/* RESULTS */
+function renderResults(){
+  const mode=$("fMode").value;const list=results.filter(r=>!mode||r.mode===mode).slice().reverse();
+  const tb=$("resTable").querySelector("tbody");tb.innerHTML="";
+  list.forEach(r=>{const tr=document.createElement("tr");tr.innerHTML=`<td class="tiny">${new Date(r.ts).toLocaleString()}</td><td>${esc(r.tester)||'<span class=muted>—</span>'}</td><td>${esc(r.mode)}</td><td>${esc(r.objective)}</td><td class="tiny">${esc(r.marketplace)||""}</td><td class="tiny">${esc(r.impact)||""}</td><td class="tiny">${esc(r.request)||""}</td><td class="tiny">${esc(r.exec)||""}</td><td>${r.score?`<span class="check ${r.correct?'ok':'no'}">${esc(r.score)}</span>`:'<span class=muted>—</span>'}</td><td class="tiny">${esc(r.tool)||""}</td><td class="tiny">${esc(r.toolNeeded)||""}</td><td>${esc(r.auto)||""}</td><td class="tiny">${esc(r.gaps)||""}</td><td class="tiny">${esc(r.requirements)||""}</td><td class="tiny">${esc(r.description)||""}</td><td class="tiny">${esc(r.feedback)||""}</td>`;tb.appendChild(tr);});
+  const by=m=>results.filter(r=>r.mode===m);
+  const accOf=a=>a.length?Math.round(100*a.filter(r=>r.correct).length/a.length):0;
+  const sem=by("SEM"),epm=by("EPM"),core=by("Core");
+  $("stats").innerHTML=`<div class="stat"><div class="n">${results.length}</div><div class="l">Total tests</div></div><div class="stat"><div class="n">${accOf(sem)}%</div><div class="l">SEM impact acc</div></div><div class="stat"><div class="n">${accOf(epm)}%</div><div class="l">EPM route acc</div></div><div class="stat"><div class="n">${accOf(core)}%</div><div class="l">Core team acc</div></div><div class="stat"><div class="n">${results.filter(r=>r.gaps&&r.gaps.length).length}</div><div class="l">Gap flags</div></div><div class="stat"><div class="n">${results.filter(r=>r.auto==="Yes").length}</div><div class="l">Automation flags</div></div>`;
+}
+function csv(){const head=["timestamp","tester","stage","objective","marketplace","impact","request_l1l2l3","team_path","score","correct","tool_used","tool_needed","automation","gaps","requirements","description","feedback"];const lines=[head.join(",")];results.forEach(r=>{const m={timestamp:new Date(r.ts).toISOString(),tester:r.tester,stage:r.mode,objective:r.objective,marketplace:r.marketplace,impact:r.impact,request_l1l2l3:r.request,team_path:r.exec,score:r.score,correct:r.correct,tool_used:r.tool,tool_needed:r.toolNeeded,automation:r.auto,gaps:r.gaps,requirements:r.requirements,description:r.description,feedback:r.feedback};lines.push(head.map(h=>{let v=m[h]==null?"":String(m[h]);if(/[",\n]/.test(v))v='"'+v.replace(/"/g,'""')+'"';return v;}).join(","));});return lines.join("\n");}
+$("fMode").addEventListener("change",renderResults);
+$("expCsv").onclick=()=>download(`Trinity_Test_Results_${today()}.csv`,csv());
+$("copyCsv").onclick=()=>{const t=$("csvOut");t.style.display="block";t.value=csv();t.select();try{document.execCommand("copy");}catch(e){}};
+$("clearRes").onclick=()=>{if(confirm("Delete ALL captured results?")){results=[];save(LS_RES,results);renderResults();}};
+
+function download(name,text){const b=new Blob([text],{type:"text/plain"});const u=URL.createObjectURL(b);const a=document.createElement("a");a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1500);}
+function refreshStat(){$("modelStat").textContent=`${rows().length} archetypes · ${(model.marketplaces||[]).length} marketplaces`;$("verBadge").textContent=`${model.version||"v2"} · ${model.date||"2026-06-10"}`;}
+
+document.querySelectorAll("nav.tabs button").forEach(b=>b.onclick=()=>{document.querySelectorAll("nav.tabs button").forEach(x=>x.classList.remove("active"));document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));b.classList.add("active");$("panel-"+b.dataset.tab).classList.add("active");});
+$("testerName").value=tester;$("testerName").addEventListener("input",e=>{tester=e.target.value;localStorage.setItem(LS_TESTER,tester);});
+
+enrich();refreshStat();renderVol();semInit();epmInit();coreInit();exploreRefresh();renderMap();renderEdit();renderResults();
+</script>
+</body>
+</html>
